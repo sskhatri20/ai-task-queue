@@ -42,13 +42,13 @@ management:
     web:
       exposure:
         include: health,info,prometheus,metrics
-  metrics:
-    export:
-      prometheus:
-        enabled: true
   endpoint:
     health:
       show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 app:
   rate-limit:
