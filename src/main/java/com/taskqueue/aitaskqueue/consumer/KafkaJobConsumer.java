@@ -3,6 +3,7 @@ package com.taskqueue.aitaskqueue.consumer;
 import com.taskqueue.aitaskqueue.model.JobStatus;
 import com.taskqueue.aitaskqueue.producer.KafkaJobMessage;
 import com.taskqueue.aitaskqueue.producer.KafkaJobProducer;
+import com.taskqueue.aitaskqueue.service.AiService;
 import com.taskqueue.aitaskqueue.service.JobService;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class KafkaJobConsumer {
 
     private final JobService jobService;
     private final KafkaJobProducer kafkaJobProducer;
+    private final AiService aiService;
     private final MeterRegistry meterRegistry;
 
     @KafkaListener(topics = {"ai-jobs", "ai-jobs-retry"}, groupId = "ai-workers",
@@ -29,7 +31,7 @@ public class KafkaJobConsumer {
         meterRegistry.counter("jobs.processing").increment();
 
         try {
-            String result = processJob(message.getPrompt());
+            String result = aiService.complete(message.getPrompt());
             jobService.updateJobStatus(message.getJobId(), JobStatus.COMPLETED, result, null);
             meterRegistry.counter("jobs.completed").increment();
             log.info("Job {} completed", message.getJobId());
@@ -50,20 +52,6 @@ public class KafkaJobConsumer {
                 log.warn("Job {} exhausted retries", message.getJobId());
             }
         }
-    }
-
-    private String processJob(String prompt) {
-        // Simulated AI processing — replace with real AI client (Anthropic, OpenAI, etc.)
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Processing interrupted", e);
-        }
-        if (prompt == null || prompt.isBlank()) {
-            throw new IllegalArgumentException("Prompt must not be blank");
-        }
-        return "AI response for: " + prompt;
     }
 
     private void sleepBackoff(long ms) {

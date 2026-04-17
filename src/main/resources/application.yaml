@@ -50,6 +50,15 @@ management:
       export:
         enabled: true
 
+ai:
+  provider: groq  # switch to "anthropic" to use Claude instead
+
+groq:
+  api-key: ${GROQ_API_KEY}
+
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:unused}
+
 app:
   rate-limit:
     max-requests: 10
